@@ -31,7 +31,33 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 }
 
+func reportHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[len("/report/"):]
+	p, _ := extractReportFromFile(title)
+	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+}
+
+func extractReportFromFile(k8snode string) (*Page, error) {
+
+	var filename string
+
+	if k8snode == "all" {
+		filename = "arquivo.txt"
+	} else {
+		filename = "arquivo.txt"
+	}
+
+	body, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return &Page{Title: filename, Body: body}, nil
+
+}
+
 func main() {
 	http.HandleFunc("/view/", viewHandler)
+	http.HandleFunc("/report/", reportHandler)
 	http.ListenAndServe(":8080", nil)
+
 }
