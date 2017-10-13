@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -34,7 +35,9 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 func reportHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/report/"):]
 	p, _ := extractReportFromFile(title)
-	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+	json.NewEncoder(w).Encode(p) //write json to
+	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+
 }
 
 func extractReportFromFile(k8snode string) (*Page, error) {
