@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+//Page Estrutura da Resposta
 type Page struct {
 	Title string
 	Body  []byte
@@ -37,6 +38,14 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	p, _ := extractReportFromFile(title)
 	json.NewEncoder(w).Encode(p) //write json to
 	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+
+}
+
+func execAnsible() (*Page, error) {
+
+	//spessrvvpkn00001.estaleiro.serpro
+
+	return nil, nil
 
 }
 
