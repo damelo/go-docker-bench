@@ -41,14 +41,6 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func execAnsible() (*Page, error) {
-
-	//spessrvvpkn00001.estaleiro.serpro
-
-	return nil, nil
-
-}
-
 func extractReportFromFile(k8snode string) (*Page, error) {
 
 	var filename string
@@ -71,5 +63,4 @@ func main() {
 	http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/report/", reportHandler)
 	http.ListenAndServe(":8080", nil)
-
 }
