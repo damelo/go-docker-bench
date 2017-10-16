@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 //Page Estrutura da Resposta
@@ -55,6 +57,17 @@ func extractReportFromFile(k8snode string) (*Page, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Print(string(dat))
+
+	f, err := os.Open("arquivo.txt")
+
+	if err != nil {
+		return nil, err
+	}
+
+	r4 := bufio.NewReader(f)
+
 	return &Page{Title: filename, Body: body}, nil
 
 }
