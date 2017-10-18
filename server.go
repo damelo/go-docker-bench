@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
+	"strings"
 )
 
 //Page Estrutura da Resposta
@@ -66,7 +68,15 @@ func extractReportFromFile(k8snode string) {
 
 		line := fscanner.Text()
 
-		fmt.Println(line)
+		//fmt.Println(line)
+
+		if strings.Contains(line, "[WARN]") {
+
+			re := regexp.MustCompile(`\d{1,2}[\.]?\d{1,2}?`)
+			fmt.Println(line)
+			fmt.Printf("%q\n", re.FindString(line))
+
+		}
 	}
 
 }
