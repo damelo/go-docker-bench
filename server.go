@@ -64,19 +64,41 @@ func extractReportFromFile(k8snode string) {
 
 	fscanner := bufio.NewScanner(fileHandle)
 
+	qtde := 0
+
 	for fscanner.Scan() {
 
 		line := fscanner.Text()
 
 		//fmt.Println(line)
+		var linhax string
+
+		re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
 
 		if strings.Contains(line, "[WARN]") {
 
-			re := regexp.MustCompile(`\d{1,2}[\.]?\d{1,2}?`)
-			fmt.Println(line)
-			fmt.Printf("%q\n", re.FindString(line))
+			ind := strings.Index(line, "0m")
+			//fmt.Println("Index: ", ind+2)
+			fmt.Println(line[ind+2:])
+
+			linhax = line[ind+2:]
+
+			if strings.Index(linhax, "*") > 0 {
+				//fmt.Println("Tem *: ", linhax)
+				qtde++
+				//fmt.Println("Qtde de *: ", qtde)
+
+			} else {
+				//fmt.Println("Não Tem *: ", linhax)
+				qtde = 0
+				fmt.Printf("%q\n", re.FindString(line[ind+2:]))
+			}
+			if qtde > 0 {
+				fmt.Println("Ocorrencias: ", qtde)
+			}
 
 		}
+
 	}
 
 }
