@@ -94,11 +94,9 @@ func extractReportFromFile(k8snode string) {
 				if qtde > 0 {
 					fmt.Println("Ocorrencias: ", qtde)
 				}
+
 				id := re.FindString(line[ind+2:])
-
-				msg := strings.Index()
-
-				fmt.Printf("%q\n")
+				fmt.Printf("%q\n", id)
 				qtde = 0
 
 			}
