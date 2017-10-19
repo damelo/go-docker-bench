@@ -65,22 +65,22 @@ func extractReportFromFile(k8snode string) {
 	fscanner := bufio.NewScanner(fileHandle)
 
 	qtde := 0
+	var linhax string
+	re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
+	//flag := false
 
 	for fscanner.Scan() {
 
 		line := fscanner.Text()
-
 		//fmt.Println(line)
-		var linhax string
-
-		re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
 
 		if strings.Contains(line, "[WARN]") {
 
+			//removes special characters at beggining of line
 			ind := strings.Index(line, "0m")
 			//fmt.Println("Index: ", ind+2)
-			fmt.Println(line[ind+2:])
-
+			//fmt.Println(line[ind+2:])
+			//Line whithout special formatting characters
 			linhax = line[ind+2:]
 
 			if strings.Index(linhax, "*") > 0 {
@@ -90,15 +90,25 @@ func extractReportFromFile(k8snode string) {
 
 			} else {
 				//fmt.Println("Não Tem *: ", linhax)
+
+				if qtde > 0 {
+					fmt.Println("Ocorrencias: ", qtde)
+				}
+				id := re.FindString(line[ind+2:])
+
+				msg := strings.Index()
+
+				fmt.Printf("%q\n")
 				qtde = 0
-				fmt.Printf("%q\n", re.FindString(line[ind+2:]))
-			}
-			if qtde > 0 {
-				fmt.Println("Ocorrencias: ", qtde)
+
 			}
 
 		}
 
+	} //fim Scan()
+
+	if qtde > 0 {
+		fmt.Println("Ocorrencias: ", qtde)
 	}
 
 }
