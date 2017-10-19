@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +15,19 @@ import (
 type Page struct {
 	Title string
 	Body  []byte
+}
+
+//Report Struct do Report
+type Report struct {
+	Node   string
+	Testes []Teste
+}
+
+//Teste Struct da Teste
+type Teste struct {
+	Item                  string
+	Desc                  string
+	OcorrenciasAdicionais int //OcorrenciasAdicionais Adicionais
 }
 
 func check(e error) {
@@ -65,38 +79,69 @@ func extractReportFromFile(k8snode string) {
 	fscanner := bufio.NewScanner(fileHandle)
 
 	qtde := 0
-	var linhax string
+	var linha string
 	re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
 	//flag := false
 
+	var report Report
+
+	report.Node = k8snode
+
 	for fscanner.Scan() {
 
-		line := fscanner.Text()
+		linetmp := fscanner.Text()
 		//fmt.Println(line)
 
-		if strings.Contains(line, "[WARN]") {
+		if strings.Contains(linetmp, "[WARN]") {
 
 			//removes special characters at beggining of line
-			ind := strings.Index(line, "0m")
+			ind := strings.Index(linetmp, "0m")
 			//fmt.Println("Index: ", ind+2)
 			//fmt.Println(line[ind+2:])
 			//Line whithout special formatting characters
-			linhax = line[ind+2:]
+			linha = linetmp[ind+2:]
 
-			if strings.Index(linhax, "*") > 0 {
-				//fmt.Println("Tem *: ", linhax)
+			if strings.Index(linha, "*") > 0 {
+				// Ocorrencia quando o teste obtem múltiplos resultados
+				// Ex: Item "5.1"
+				// - Ensure AppArmor Profile is Enabled
+				// OcorrenciasAdicionais:  78
+				// 78 containers sem o profile AppArmor
+				// fmt.Println("Tem *: ", linhax)
+
 				qtde++
 				//fmt.Println("Qtde de *: ", qtde)
 
 			} else {
-				//fmt.Println("Não Tem *: ", linhax)
+				//Item e Descricao
+				id := re.FindString(linha)
 
-				if qtde > 0 {
-					fmt.Println("Ocorrencias: ", qtde)
+				/* if qtde > 0 {
+					fmt.Println("OcorrenciasAdicionais: ", qtde)
+				}
+				*/
+
+				//fmt.Printf("%q\n", id)
+
+				nome := linha[strings.Index(linha, "-"):len(linha)]
+				//fmt.Println(nome)
+
+				m := Teste{
+					Item: id,
+					Desc: nome,
+					OcorrenciasAdicionais: qtde,
 				}
 
-				id := re.FindString(line[ind+2:])
-				fmt.Printf("%q\n", id)
+				b, err := json.Marshal(m)
+
+				check(err)
+
+				//fmt.Println("JSON: ", b)
+
+				os.Stdout.Write(b)
+				//Item        string
+				//Desc        string
+				//OcorrenciasAdicionais int
 				qtde = 0
 
 			}
@@ -104,10 +149,6 @@ func extractReportFromFile(k8snode string) {
 		}
 
 	} //fim Scan()
-
-	if qtde > 0 {
-		fmt.Println("Ocorrencias: ", qtde)
-	}
 
 }
 
