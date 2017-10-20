@@ -101,6 +101,27 @@ func extractReportFromFile(k8snode string) {
 			//Line whithout special formatting characters
 			linha = linetmp[ind+2:]
 
+			if id := re.FindString(linha); len(id) > 0 {
+				nome := linha[strings.Index(linha, "-"):len(linha)]
+				//fmt.Println(nome)
+
+				m := Teste{
+					Item: id,
+					Desc: nome,
+					OcorrenciasAdicionais: qtde,
+				}
+
+				b, err := json.Marshal(m)
+				check(err)
+				os.Stdout.Write(b)
+				qtde = 0
+
+			} else if strings.Index(linha, "*") > 0 {
+
+			} else {
+				panic(0)
+			}
+
 			if strings.Index(linha, "*") > 0 {
 				// Ocorrencia quando o teste obtem múltiplos resultados
 				// Ex: Item "5.1"
