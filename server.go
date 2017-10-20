@@ -78,16 +78,50 @@ func extractReportFromFile(k8snode string) {
 
 	fscanner := bufio.NewScanner(fileHandle)
 
-	qtde := 0
-	var linha string
+	var qtde = 0
+	//var linha string
 	re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
 	//flag := false
 
 	var report Report
+	var item string
+	var descricao string
+	var linhas []string
 
 	report.Node = k8snode
 
 	for fscanner.Scan() {
+
+		linetmp := fscanner.Text()
+
+		if strings.Contains(linetmp, "[WARN]") {
+			ind := strings.Index(linetmp, "0m")
+			linha := linetmp[ind+2:]
+			linhas = append(linhas, linha)
+
+		}
+	}
+
+	for index, linha := range linhas {
+
+		item = re.FindString(linha)
+
+		fmt.Println("index: ", index, " item: ", item, "linha: ", linha)
+
+		if len(item) > 0 && strings.Index(linha, "*") < 0 {
+			descricao = linha[strings.Index(linha, "-"):len(linha)]
+			fmt.Println("Desc: ", descricao)
+			qtde = 0
+		} else if strings.Index(linha, "*") > 0 {
+			qtde++
+			fmt.Println("com *, qtde:", qtde)
+		} else {
+			fmt.Println("Erro na linha: ", linha)
+		}
+
+	}
+
+	/*for scanner.Scan() {
 
 		linetmp := fscanner.Text()
 		//fmt.Println(line)
@@ -97,82 +131,45 @@ func extractReportFromFile(k8snode string) {
 			//removes special characters at beggining of line
 			ind := strings.Index(linetmp, "0m")
 			//fmt.Println("Index: ", ind+2)
-			//fmt.Println(line[ind+2:])
+			//fmt.Println(linetmp[ind+2:])
 			//Line whithout special formatting characters
 			linha = linetmp[ind+2:]
 
-			var item, desc string
+			fmt.Println("linha -> ", linha)
 
-			if item = re.FindString(linha); len(item) > 0 {
-				desc := linha[strings.Index(linha, "-"):len(linha)]
-				//fmt.Println(nome)
+			item = re.FindString(linha)
+
+			if len(item) > 0 && strings.Index(linha, "*") < 0 {
+
+				fmt.Println("item: ", item)
+				descricao = linha[strings.Index(linha, "-"):len(linha)]
+				fmt.Println("Desc: ", descricao)
 				qtde = 0
 
-			} else if strings.Index(linha, "*") > 0 {
-				qtde++
-
 			} else {
-				panic(0)
-			}
-
-			m := Teste{
-				Item: id,
-				Desc: nome,
-				OcorrenciasAdicionais: qtde,
-			}
-
-			b, err := json.Marshal(m)
-			check(err)
-			os.Stdout.Write(b)
-
-			if strings.Index(linha, "*") > 0 {
-				// Ocorrencia quando o teste obtem múltiplos resultados
-				// Ex: Item "5.1"
-				// - Ensure AppArmor Profile is Enabled
-				// OcorrenciasAdicionais:  78
-				// 78 containers sem o profile AppArmor
-				// fmt.Println("Tem *: ", linhax)
 
 				qtde++
-				//fmt.Println("Qtde de *: ", qtde)
+				fmt.Println("com *, qtde:", qtde)
 
-			} else {
-				//Item e Descricao
-				item := re.FindString(linha)
+				//todo - extract message
 
-				/* if qtde > 0 {
-					fmt.Println("OcorrenciasAdicionais: ", qtde)
-				}
-				*/
+			} // else {
+			//fudeu
+			//todo, rartar linh malformada e logar
+			//fmt.Println("Fudeu")
+			//panic(0)
+			//}
 
-				//fmt.Printf("%q\n", item)
+			fmt.Println("adicionando ", item)
+			//report.Testes = append(report.Testes, m)
 
-				nome := linha[strings.Index(linha, "-"):len(linha)]
-				//fmt.Println(nome)
+		} //fim if [WARN]
 
-				m := Teste{
-					Item: item,
-					Desc: nome,
-					OcorrenciasAdicionais: qtde,
-				}
+	} //fim Scan() */
 
-				b, err := json.Marshal(m)
-
-				check(err)
-
-				//fmt.Println("JSON: ", b)
-
-				os.Stdout.Write(b)
-				//Item        string
-				//Desc        string
-				//OcorrenciasAdicionais int
-				qtde = 0
-
-			}
-
-		}
-
-	} //fim Scan()
+	b, err := json.Marshal(report)
+	check(err)
+	os.Stdout.Write(b)
 
 }
 
