@@ -84,11 +84,13 @@ func extractReportFromFile(k8snode string) {
 	//flag := false
 
 	var report Report
+
+	report = Report{Node: k8snode}
 	var item string
 	var descricao string
 	var linhas []string
 
-	report.Node = k8snode
+	//report.Node = k8snode
 
 	for fscanner.Scan() {
 
@@ -101,6 +103,7 @@ func extractReportFromFile(k8snode string) {
 
 		}
 	}
+	var indexItem int
 
 	for index, linha := range linhas {
 
@@ -108,64 +111,27 @@ func extractReportFromFile(k8snode string) {
 
 		fmt.Println("index: ", index, " item: ", item, "linha: ", linha)
 
-		if len(item) > 0 && strings.Index(linha, "*") < 0 {
+		if len(item) > 0 && strings.Index(linha, "*") < 0 { //WARN com item e descricao
 			descricao = linha[strings.Index(linha, "-"):len(linha)]
 			fmt.Println("Desc: ", descricao)
 			qtde = 0
-		} else if strings.Index(linha, "*") > 0 {
+			report.Testes = append(report.Testes, Teste{Item: item, Desc: descricao})
+			indexItem = index
+			fmt.Println("indexItem: ", indexItem)
+
+		} else if strings.Index(linha, "*") > 0 { //ocorrencia adicional do item
 			qtde++
 			fmt.Println("com *, qtde:", qtde)
-		} else {
+			fmt.Println("indexItem: ", indexItem)
+			if strings.Index(linhas[index+1], "*") < 0 { //se a proxima linha nao contem *
+				report.Testes[indexItem].OcorrenciasAdicionais = qtde
+			}
+
+		} else { //Linha mal formada
 			fmt.Println("Erro na linha: ", linha)
 		}
 
 	}
-
-	/*for scanner.Scan() {
-
-		linetmp := fscanner.Text()
-		//fmt.Println(line)
-
-		if strings.Contains(linetmp, "[WARN]") {
-
-			//removes special characters at beggining of line
-			ind := strings.Index(linetmp, "0m")
-			//fmt.Println("Index: ", ind+2)
-			//fmt.Println(linetmp[ind+2:])
-			//Line whithout special formatting characters
-			linha = linetmp[ind+2:]
-
-			fmt.Println("linha -> ", linha)
-
-			item = re.FindString(linha)
-
-			if len(item) > 0 && strings.Index(linha, "*") < 0 {
-
-				fmt.Println("item: ", item)
-				descricao = linha[strings.Index(linha, "-"):len(linha)]
-				fmt.Println("Desc: ", descricao)
-				qtde = 0
-
-			} else {
-
-				qtde++
-				fmt.Println("com *, qtde:", qtde)
-
-				//todo - extract message
-
-			} // else {
-			//fudeu
-			//todo, rartar linh malformada e logar
-			//fmt.Println("Fudeu")
-			//panic(0)
-			//}
-
-			fmt.Println("adicionando ", item)
-			//report.Testes = append(report.Testes, m)
-
-		} //fim if [WARN]
-
-	} //fim Scan() */
 
 	b, err := json.Marshal(report)
 	check(err)
