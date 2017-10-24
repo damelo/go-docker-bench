@@ -19,7 +19,8 @@ type Page struct {
 
 //Report Struct do Report
 type Report struct {
-	Node   string
+	Node string
+
 	Testes []Teste
 }
 
@@ -58,6 +59,9 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 	//title := r.URL.Path[len("/report/"):]
 	//p, _ := extractReportFromFile(title)
 	//json.NewEncoder(w).Encode(p) //write json to
+
+	extractReportFromFile("all")
+
 	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 
 }
@@ -109,26 +113,26 @@ func extractReportFromFile(k8snode string) {
 
 		item = re.FindString(linha)
 
-		fmt.Println("index: ", index, " item: ", item, "linha: ", linha)
+		//fmt.Println("index: ", index, " item: ", item, "linha: ", linha)
 
 		if len(item) > 0 && strings.Index(linha, "*") < 0 { //WARN com item e descricao
 			descricao = linha[strings.Index(linha, "-"):len(linha)]
-			fmt.Println("Desc: ", descricao)
+			//fmt.Println("Desc: ", descricao)
 			qtde = 0
 			report.Testes = append(report.Testes, Teste{Item: item, Desc: descricao})
-			indexItem = index
-			fmt.Println("indexItem: ", indexItem)
+			indexItem = len(report.Testes) - 1
+			//fmt.Println("indexItem: ", indexItem)
 
 		} else if strings.Index(linha, "*") > 0 { //ocorrencia adicional do item
 			qtde++
-			fmt.Println("com *, qtde:", qtde)
-			fmt.Println("indexItem: ", indexItem)
-			if strings.Index(linhas[index+1], "*") < 0 { //se a proxima linha nao contem *
+
+			if index == len(linhas)-1 || strings.Index(linhas[index+1], "*") < 0 { //se a proxima linha nao contem *
 				report.Testes[indexItem].OcorrenciasAdicionais = qtde
 			}
 
 		} else { //Linha mal formada
-			fmt.Println("Erro na linha: ", linha)
+			panic("fudeu")
+
 		}
 
 	}
@@ -141,9 +145,7 @@ func extractReportFromFile(k8snode string) {
 
 func main() {
 	//http.HandleFunc("/view/", viewHandler)
-	//http.HandleFunc("/report/", reportHandler)
-	//http.ListenAndServe(":8080", nil)
-
-	extractReportFromFile("all")
+	http.HandleFunc("/report/", reportHandler)
+	http.ListenAndServe(":8080", nil)
 
 }
