@@ -7,8 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 //page Estrutura da Resposta
@@ -17,18 +20,22 @@ type page struct {
 	Body  []byte
 }
 
-//report Struct do report
-type report struct {
+//Report Struct do Report
+type Report struct {
 	Node string
 
-	testes []teste
+	Testes []Teste
 }
 
-//teste Struct da teste
-type teste struct {
+//Teste Struct da Teste
+type Teste struct {
 	Item                  string
 	Desc                  string
 	OcorrenciasAdicionais int //OcorrenciasAdicionais Adicionais
+}
+
+//Config struct da Configuracao
+type Config struct {
 }
 
 func check(e error) {
@@ -56,24 +63,25 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
-	//title := r.URL.Path[len("/report/"):]
-	//p, _ := extractreportFromFile(title)
+	node := r.URL.Path[len("/cisreport/"):]
+	p := extractReportFromFile(node, dir)
 	//json.NewEncoder(w).Encode(p) //write json to
+	extractReportFromFile("all")
 
-	extractreportFromFile("all")
-
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(p)
 	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 
 }
 
-func extractreportFromFile(k8snode string) {
+func extractReportFromFile(k8snode string, dir string) []byte {
 
 	var filename string
 
 	if k8snode == "all" {
 		filename = "cis-docker-all.txt"
-	} else {
-		filename = "cis-docker-all.txt"
+	} else if strings.Contains(k8snode, "spessrvvpkn") {
+		filename = dir + "cis-docker-" + k8snode + ".estaleiro.serpro"
 	}
 
 	fileHandle, err := os.Open(filename)
@@ -87,14 +95,15 @@ func extractreportFromFile(k8snode string) {
 	re := regexp.MustCompile(`\d{1,2}[\.]\d{1,2}`)
 	//flag := false
 
-	var report report
+	var report Report
 
-	report = report{Node: k8snode}
+	report = Report{Node: k8snode}
+
 	var item string
 	var descricao string
 	var linhas []string
 
-	//report.Node = k8snode
+	//Report.Node = k8snode
 
 	for fscanner.Scan() {
 
@@ -119,15 +128,15 @@ func extractreportFromFile(k8snode string) {
 			descricao = linha[strings.Index(linha, "-"):len(linha)]
 			//fmt.Println("Desc: ", descricao)
 			qtde = 0
-			report.testes = append(report.testes, teste{Item: item, Desc: descricao})
-			indexItem = len(report.testes) - 1
+			report.Testes = append(report.Testes, Teste{Item: item, Desc: descricao})
+			indexItem = len(report.Testes) - 1
 			//fmt.Println("indexItem: ", indexItem)
 
 		} else if strings.Index(linha, "*") > 0 { //ocorrencia adicional do item
 			qtde++
 
 			if index == len(linhas)-1 || strings.Index(linhas[index+1], "*") < 0 { //se a proxima linha nao contem *
-				report.testes[indexItem].OcorrenciasAdicionais = qtde
+				report.Testes[indexItem].OcorrenciasAdicionais = qtde
 			}
 
 		} else { //Linha mal formada
@@ -137,13 +146,28 @@ func extractreportFromFile(k8snode string) {
 
 	}
 
-	b, err := json.Marshal(report)
+	jsonreport, err := json.Marshal(report)
 	check(err)
-	os.Stdout.Write(b)
+	//os.Stdout.Write(b)
+	return jsonreport
 
 }
 
 func main() {
+
+	filename, _ := filepath.Abs("./config.yaml")
+	yamlFile, err := ioutil.ReadFile(filename)
+
+	check(err)
+
+	var config Config
+
+	err = yaml.Unmarshal(yamlFile, &config)
+
+	if err != nil {
+		panic(err)
+	}
+
 	//http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/report/", reportHandler)
 	http.ListenAndServe(":6669", nil)
