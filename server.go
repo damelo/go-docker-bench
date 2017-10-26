@@ -1,4 +1,4 @@
-package cistest
+package main
 
 import (
 	"bufio"
@@ -22,12 +22,11 @@ type page struct {
 
 //Report Struct do Report
 type Report struct {
-	Node string
-
+	Node   string
 	Testes []Teste
 }
 
-//Teste Struct da Teste
+//Teste Struct do Teste
 type Teste struct {
 	Item                  string
 	Desc                  string
@@ -36,7 +35,10 @@ type Teste struct {
 
 //Config struct da Configuracao
 type Config struct {
+	Dir string
 }
+
+var config Config
 
 func check(e error) {
 	if e != nil {
@@ -64,13 +66,26 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
 	node := r.URL.Path[len("/cisreport/"):]
-	p := extractReportFromFile(node, dir)
-	//json.NewEncoder(w).Encode(p) //write json to
-	extractReportFromFile("all")
+	p := extractReportFromFile(node, config.Dir)
+	//json.NewEncoder(w).Encode//(p) //write json to
+	//extractReportFromFile(node,)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(p)
 	//fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+
+}
+
+func loadConfig() {
+
+	filename, _ := filepath.Abs("./config.yml")
+	yamlFile, err := ioutil.ReadFile(filename)
+
+	check(err)
+
+	err = yaml.Unmarshal(yamlFile, &config)
+
+	check(err)
 
 }
 
@@ -154,22 +169,9 @@ func extractReportFromFile(k8snode string, dir string) []byte {
 }
 
 func main() {
-
-	filename, _ := filepath.Abs("./config.yaml")
-	yamlFile, err := ioutil.ReadFile(filename)
-
-	check(err)
-
-	var config Config
-
-	err = yaml.Unmarshal(yamlFile, &config)
-
-	if err != nil {
-		panic(err)
-	}
-
+	loadConfig()
 	//http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/report/", reportHandler)
 	http.ListenAndServe(":6669", nil)
-
+	fmt.Println("Escutando na porta...")
 }

@@ -1,0 +1,3 @@
+config:
+    dir: "c:\\cisreports"
+    tcpport:    6669
