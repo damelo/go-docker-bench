@@ -35,7 +35,9 @@ type Teste struct {
 
 //Config struct da Configuracao
 type Config struct {
-	Dir string
+	Dir    string `yaml:"dir"`
+	Port   string `yaml:"port"`
+	Ipaddr string `yaml:"ipaddr"`
 }
 
 var config Config
@@ -65,6 +67,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func reportHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("reportHandler - ", config.Dir)
 	node := r.URL.Path[len("/cisreport/"):]
 	p := extractReportFromFile(node, config.Dir)
 	//json.NewEncoder(w).Encode//(p) //write json to
@@ -76,15 +79,18 @@ func reportHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func loadConfig() {
+func loadConfig(filename string) {
+	fmt.Println("Carregando Configuração...")
+	file, _ := filepath.Abs(filename)
 
-	filename, _ := filepath.Abs("./config.yml")
-	yamlFile, err := ioutil.ReadFile(filename)
+	fmt.Println("File: ", file)
 
+	yamlFile, err := ioutil.ReadFile(file)
+	//fmt.Println("loadconfig y: ", config.Dir)
 	check(err)
 
 	err = yaml.Unmarshal(yamlFile, &config)
-
+	fmt.Println("loadconfig config dir: ", config.Dir)
 	check(err)
 
 }
@@ -96,7 +102,7 @@ func extractReportFromFile(k8snode string, dir string) []byte {
 	if k8snode == "all" {
 		filename = "cis-docker-all.txt"
 	} else if strings.Contains(k8snode, "spessrvvpkn") {
-		filename = dir + "cis-docker-" + k8snode + ".estaleiro.serpro"
+		filename = dir + "/cis-docker-" + k8snode + ".estaleiro.serpro.txt"
 	}
 
 	fileHandle, err := os.Open(filename)
@@ -169,9 +175,11 @@ func extractReportFromFile(k8snode string, dir string) []byte {
 }
 
 func main() {
-	loadConfig()
+	fmt.Println("Iniciando...")
+	loadConfig("config.yml")
+	//fmt.Println("config dir: ", config.Dir)
+
 	//http.HandleFunc("/view/", viewHandler)
-	http.HandleFunc("/report/", reportHandler)
-	http.ListenAndServe(":6669", nil)
-	fmt.Println("Escutando na porta...")
-}
+	http.HandleFunc("/cisreport/", reportHandler)
+	http.ListenAndServe("0.0.0.0:6669", nil)
+	
