@@ -182,4 +182,5 @@ func main() {
 	//http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/cisreport/", reportHandler)
 	http.ListenAndServe("0.0.0.0:6669", nil)
-	
+
+}
